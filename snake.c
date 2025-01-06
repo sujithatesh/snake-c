@@ -25,39 +25,41 @@ typedef struct snake{
     char* name;
 }snake;
 
-void addSnake(snake* head){
+snake* addSnake(snake* head){
     int counter = 1;
     int dir = head->direction;
     int head_x = head->rect.x;
     int head_y = head->rect.y;
 
-    while(head->next != NULL){
-        counter++;
-        head = head->next;
-    }
-
     snake* head1 = (snake*)malloc(sizeof(snake));
-    head1->next = NULL;
+    head1->next = head;
     head1->name = "head1""cc";
+    head1->direction = head->direction;
+    snake* temp = head1;
+    while(temp->next){
+        temp = temp->next;
+    }
+    free(temp->next);
+    temp->next = NULL;
 
-    head->next = head1;
     switch(dir){
         case W:
-            head1->rect = (Rectangle){1000, 1000, TILE_SIZE, TILE_SIZE};
+            head1->rect = (Rectangle){head->rect.x, head->rect.y + TILE_SIZE, TILE_SIZE, TILE_SIZE};
             break;
         case A:
-            head1->rect = (Rectangle){1000, 1000, TILE_SIZE, TILE_SIZE};
+            head1->rect = (Rectangle){head->rect.x - TILE_SIZE, head->rect.y, TILE_SIZE, TILE_SIZE};
             break;
         case S:
-            head1->rect = (Rectangle){1000, 1000, TILE_SIZE, TILE_SIZE};
+            head1->rect = (Rectangle){head->rect.x, head->rect.y - TILE_SIZE, TILE_SIZE, TILE_SIZE};
             break;
         case D:
-            head1->rect = (Rectangle){1000, 1000, TILE_SIZE, TILE_SIZE};
+            head1->rect = (Rectangle){head->rect.x + TILE_SIZE, head->rect.y, TILE_SIZE, TILE_SIZE};
             break;
         default:
             assert("FIXME!: Head doesn't have a direction");
             break;
     }
+    return head1;
 }
 
 typedef struct Vec2{
@@ -66,11 +68,11 @@ typedef struct Vec2{
 }Vec2;
 
 int main(void){ 
-    snake head;
-    head.rect = (Rectangle){TILE_SIZE, TILE_SIZE, TILE_SIZE, TILE_SIZE};
-    head.name = "head";
-    head.next = NULL;
-    head.direction = D;
+    snake* head = (snake*)malloc(sizeof(snake));
+    head->rect = (Rectangle){TILE_SIZE, TILE_SIZE, TILE_SIZE, TILE_SIZE};
+    head->name = "head";
+    head->next = NULL;
+    head->direction = D;
     bool flag = true;
     float speedMultiplier = 0;
     char scoreBuff[10] = "0";
@@ -86,10 +88,10 @@ int main(void){
     fruit.height = TILE_SIZE;
 
     //debug
-    fruit.x = 40;
-    fruit.y = 19;
+    // fruit.x = 40;
+    // fruit.y = 19;
 
-    addSnake(&head);
+    head = addSnake(head);
 
     int test = 0;
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Snake");
@@ -107,51 +109,58 @@ int main(void){
             timer += deltaTime;
             if(timer > (1.0 / speed)){
                 timer = 0;
-                snake* temp = &head;
-                Rectangle prev = temp->rect;
-                Rectangle curr = temp->rect;
+                snake* temp = head;
                 temp = temp->next;
                 while(temp != NULL){
-                    if(CheckCollisionRecs(temp->rect, head.rect)){
-                        GameOver = true;
+                    if(CheckCollisionRecs(temp->rect, head->rect)){
+                        GameOver = false;
                     }
-                    curr = temp->rect;
-                    temp->rect = prev;
-                    prev = curr;
+                    if(temp->next){
+                        if(temp->next->next == NULL){
+                            snake* free_temp = temp->next;
+                            temp->next->next = NULL;
+                            free(free_temp);
+                            head = addSnake(head);
+                        }
+                    }
+                    else{
+                        head = addSnake(head);
+                        head->next->next = NULL;
+                    }
                     temp = temp->next;
                 }
-                switch(head.direction){
+                switch(head->direction){
                     case W:
-                        head.rect.y -= TILE_SIZE;
+                        head->rect.y -= TILE_SIZE;
                         break;
                     case A:
-                        head.rect.x -= TILE_SIZE;
+                        head->rect.x -= TILE_SIZE;
                         break;
                     case S:
-                        head.rect.y += TILE_SIZE;
+                        head->rect.y += TILE_SIZE;
                         break;
                     case D:
-                        head.rect.x += TILE_SIZE;
+                        head->rect.x += TILE_SIZE;
                         break;
                     default:
                         assert("Init direction");
                         break;
                 }
             }
-            if(IsKeyDown(KEY_W) && head.direction != S){
-                head.direction = W;
+            if(IsKeyDown(KEY_W) && head->direction != S){
+                head->direction = W;
                 speed = 6 + speedMultiplier;
             }
-            else if(IsKeyDown(KEY_A) && head.direction != D){
-                head.direction = A;
+            else if(IsKeyDown(KEY_A) && head->direction != D){
+                head->direction = A;
                 speed = 6 + speedMultiplier;
             }
-            else if(IsKeyDown(KEY_S) && head.direction != W){
-                head.direction = S;
+            else if(IsKeyDown(KEY_S) && head->direction != W){
+                head->direction = S;
                 speed = 6 + speedMultiplier;
             }
-            else if(IsKeyDown(KEY_D) && head.direction != A){
-                head.direction = D;
+            else if(IsKeyDown(KEY_D) && head->direction != A){
+                head->direction = D;
                 speed = 6 + speedMultiplier;
             }
 
@@ -161,7 +170,7 @@ int main(void){
             }
 
             //drawing
-            snake* temp = &head;
+            snake* temp = head;
             int counter = 0;
             while(temp && (temp->rect.x >= 0 && temp->rect.x <= SCREEN_WIDTH) &&
                            (temp->rect.y >= 0 && temp->rect.y <= SCREEN_WIDTH) ){
@@ -174,21 +183,21 @@ int main(void){
             }
 
             //check collision
-            if( CheckCollisionRecs(fruit, head.rect))
+            if( CheckCollisionRecs(fruit, head->rect))
             {
                 test++;
                 if(flag == true)
-                    addSnake(&head);
+                    // head = *addSnake(&head);
                 flag = false;
                 speedMultiplier += 0.2;
                 score++;
             }
 
             //go around
-            if(head.rect.x > 600) head.rect.x = 0;
-            if(head.rect.x < 0) head.rect.x = 600;
-            if(head.rect.y > 600) head.rect.y = 0;
-            if(head.rect.y < 0) head.rect.y = 600;
+            if(head->rect.x > 600) head->rect.x = 0;
+            if(head->rect.x < 0) head->rect.x = 600;
+            if(head->rect.y > 600) head->rect.y = 0;
+            if(head->rect.y < 0) head->rect.y = 600;
 
             if(flag)
                 DrawRectangle(fruit.x, fruit.y, TILE_SIZE, TILE_SIZE, GREEN);
