@@ -26,34 +26,26 @@ typedef struct snake{
 }snake;
 
 snake* addSnake(snake* head){
-    int counter = 1;
     int dir = head->direction;
-    int head_x = head->rect.x;
-    int head_y = head->rect.y;
+    printf("add\n");
 
     snake* head1 = (snake*)malloc(sizeof(snake));
     head1->next = head;
     head1->name = "head1""cc";
     head1->direction = head->direction;
-    snake* temp = head1;
-    while(temp->next){
-        temp = temp->next;
-    }
-    free(temp->next);
-    temp->next = NULL;
 
     switch(dir){
         case W:
-            head1->rect = (Rectangle){head->rect.x, head->rect.y + TILE_SIZE, TILE_SIZE, TILE_SIZE};
+            head1->rect = (Rectangle){head->rect.x , head->rect.y, TILE_SIZE, TILE_SIZE};
             break;
         case A:
-            head1->rect = (Rectangle){head->rect.x - TILE_SIZE, head->rect.y, TILE_SIZE, TILE_SIZE};
+            head1->rect = (Rectangle){head->rect.x , head->rect.y, TILE_SIZE, TILE_SIZE};
             break;
         case S:
-            head1->rect = (Rectangle){head->rect.x, head->rect.y - TILE_SIZE, TILE_SIZE, TILE_SIZE};
+            head1->rect = (Rectangle){head->rect.x , head->rect.y, TILE_SIZE, TILE_SIZE};
             break;
         case D:
-            head1->rect = (Rectangle){head->rect.x + TILE_SIZE, head->rect.y, TILE_SIZE, TILE_SIZE};
+            head1->rect = (Rectangle){head->rect.x , head->rect.y, TILE_SIZE, TILE_SIZE};
             break;
         default:
             assert("FIXME!: Head doesn't have a direction");
@@ -88,14 +80,16 @@ int main(void){
     fruit.height = TILE_SIZE;
 
     //debug
-    // fruit.x = 40;
-    // fruit.y = 19;
+    fruit.x = 40;
+    fruit.y = 19;
 
     head = addSnake(head);
+    head = addSnake(head);
+    head = addSnake(head);
 
-    int test = 0;
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Snake");
     float timer = 0.0f;
+    int test = 0;
     while(!WindowShouldClose()){
         BeginDrawing();
         ClearBackground(RAYWHITE);
@@ -115,19 +109,20 @@ int main(void){
                     if(CheckCollisionRecs(temp->rect, head->rect)){
                         GameOver = false;
                     }
-                    if(temp->next){
-                        if(temp->next->next == NULL){
-                            snake* free_temp = temp->next;
-                            temp->next->next = NULL;
-                            free(free_temp);
-                            head = addSnake(head);
-                        }
-                    }
-                    else{
+                    if(temp->next != NULL && temp->next->next == NULL){
+                        snake* free_temp = temp->next->next;
+                        temp->next = NULL;
+                        free(free_temp);
+                        printf("free\n");
                         head = addSnake(head);
-                        head->next->next = NULL;
                     }
+                    else if(temp->next == NULL){
+                        head = addSnake(head);
+                        head->next = NULL;
+                    }
+                    printf("head->next : %p\n", head->next);
                     temp = temp->next;
+                    test++;
                 }
                 switch(head->direction){
                     case W:
@@ -182,12 +177,14 @@ int main(void){
                 counter++;
             }
 
-            //check collision
+            // add score
+            //check collision with fruit
             if( CheckCollisionRecs(fruit, head->rect))
             {
-                test++;
+                // test++;
                 if(flag == true)
-                    // head = *addSnake(&head);
+                    head = addSnake(&head);
+                printf("head : %p \nhead->next : %p\n", head, head->next);
                 flag = false;
                 speedMultiplier += 0.2;
                 score++;
@@ -213,6 +210,7 @@ int main(void){
             DrawText(scoreBuff , SCREEN_WIDTH / 2 , SCREEN_HEIGHT / 2 + 22, 20, RED);
         }
 
+            DrawFPS(50, 50);
         EndDrawing();
     }
     CloseWindow();
