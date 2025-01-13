@@ -7,7 +7,6 @@
 
 #define SCREEN_WIDTH 600
 #define SCREEN_HEIGHT 600
-#define SPEED 2
 #define TILE_SIZE 20
 
 enum Direction{
@@ -52,17 +51,23 @@ snake* addSnake(snake* head){
 
 
 int main(void){
+	int speed = 6;
+	bool flag = true;
+
 	InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "snake");
 	snake* head = (snake*)malloc(sizeof(snake));
 	head->rec.x = 20;
 	head->rec.y = 20;
 	head->dir= D;
 	head->next = NULL;
+	for(int i = 0; i < 4; i++){
+		head = addSnake(head);
+	}
 
-	bool advanceInTick = true;
+	bool freeTheEnd = true;
 	SetRandomSeed(time(NULL));
 	Rectangle fruit;
-	fruit.x = 40;
+	fruit.x = 560;
 	fruit.y = 20;
 
 	float timePassed = 0;
@@ -70,6 +75,7 @@ int main(void){
 		BeginDrawing();
 		ClearBackground(RAYWHITE);
 
+		flag = true;
 
 		// INPUT
 		if(IsKeyDown(KEY_W)){
@@ -89,32 +95,43 @@ int main(void){
 		snake* temp = head;
 		while(temp->next != NULL){
 			temp = temp->next;
-			DrawRectangle(temp->rec.x, temp->rec.y, 20, 20, RED);
-			printf("counter: %d x : %lf, y:  %lf\n", counter, temp->rec.x, temp->rec.y);
+			if(counter % 2)
+				DrawRectangle(temp->rec.x, temp->rec.y, 20, 20, RED);
+			else
+				DrawRectangle(temp->rec.x, temp->rec.y, 20, 20, BLACK);
 			counter++;
 		}
 
 		timePassed += GetFrameTime();
-		if(timePassed > 0.5){
+		if(timePassed > 1.0f / speed){
 			timePassed = 0;
 
-			// if addSnake dont advance
-			if(advanceInTick){
 				// perpetual motion
-				head = addSnake(head);
-				while(temp->next != NULL){
-					temp = temp->next;
+			head = addSnake(head);
+			// if addSnake dont advance
+			if(freeTheEnd){
+				snake* iter = head;
+				while(iter->next->next != NULL){
+					iter = iter->next;
 				}
-				free(temp->next);
-				temp->next = NULL;
+				free(iter->next);
+				iter->next = NULL;
 			}
+			freeTheEnd = true;
 		}
 
-		//fruit
-		// DrawRectangle(fruit.x, fruit.y, TILE_SIZE, TILE_SIZE, GREEN);
-		if(CheckCollisionRecs(fruit, head->rec)){
-			printf("Collision!\n");
+		DrawRectangle(fruit.x, fruit.y, TILE_SIZE, TILE_SIZE, GREEN);
+		if(fruit.x == head->rec.x && fruit.y == head->rec.y && flag){
+			flag = false;
+			addSnake(head);
+			int newX = GetRandomValue(TILE_SIZE, SCREEN_WIDTH);
+			int newY = GetRandomValue(TILE_SIZE, SCREEN_HEIGHT);
+			fruit.x = newX - newX % TILE_SIZE;
+			fruit.y = newY - newY % TILE_SIZE;
+			freeTheEnd = false;
 		}
+
+		DrawFPS(20,20);
 		EndDrawing();
 	}
 	return 0;
