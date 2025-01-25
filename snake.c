@@ -187,6 +187,7 @@ int main(void) {
         EndDrawing();
     }
     
+    CloseAudioDevice();
     arena_destroy(&arena);
     CloseWindow();
     

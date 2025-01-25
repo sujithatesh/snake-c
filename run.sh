@@ -5,10 +5,10 @@ OS=$(uname)
 
 if [[ "$OS" == "Linux" ]]; then
     echo "Building for Linux..."
-    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/sujith/gitshit/real-raylib/src
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/sujith/gitshit/raylib-5.0_linux_amd64/lib
     gcc snake.c -Wall -g -o snake \
-    -L /home/sujith/gitshit/real-raylib/src \
-    -I /home/sujith/gitshit/real-raylib/src \
+    -L /home/sujith/gitshit/raylib-5.0_linux_amd64/lib \
+    -I /home/sujith/gitshit/raylib-5.0_linux_amd64/include \
     -lraylib -lm \
     && ./snake
 
