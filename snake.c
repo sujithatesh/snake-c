@@ -106,16 +106,36 @@ int main(void) {
     double accumTime = 0;
     
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Snake");
+    InitAudioDevice();
+    Sound food = LoadSound("/home/sujith/Documents/snake-c/music/food.mp3");
+    Sound music = LoadSound("/home/sujith/Documents/snake-c/music/music.mp3");
+    Sound gameOverSound = LoadSound("/home/sujith/Documents/snake-c/music/gameover.mp3");
+    Sound move = LoadSound("/home/sujith/Documents/snake-c/music/move.mp3");
+
+    SetSoundVolume(music, 0.1);
+    PlaySound(music);
     
     while(!WindowShouldClose()){
         BeginDrawing();
         ClearBackground(RAYWHITE);
         accumTime += GetFrameTime();
         
-        if(IsKeyDown(KEY_W)) head->dir = W;
-        if(IsKeyDown(KEY_A)) head->dir = A;
-        if(IsKeyDown(KEY_S)) head->dir = S;
-        if(IsKeyDown(KEY_D)) head->dir = D;
+        if(IsKeyDown(KEY_W)){
+            head->dir = W;
+            PlaySound(move);
+        }
+        if(IsKeyDown(KEY_A)){
+            head->dir = A;
+            PlaySound(move);
+        }
+        if(IsKeyDown(KEY_S)){
+            head->dir = S;
+            PlaySound(move);
+        }
+        if(IsKeyDown(KEY_D)){
+            head->dir = D;
+            PlaySound(move);
+        }
         
         if(accumTime > 1 / speed){
             accumTime = 0;
@@ -150,6 +170,7 @@ int main(void) {
                 tempY -= tempY % TILE_SIZE;
                 fruit.x = tempX;
                 fruit.y = tempY;
+                PlaySound(food);
                 score++;
                 speed += 0.5;
                 stop = true;
@@ -157,6 +178,7 @@ int main(void) {
         }
         else{
             DrawText("Game Over!!", SCREEN_WIDTH / 2 - 5 * TILE_SIZE, SCREEN_HEIGHT / 2 - TILE_SIZE, TILE_SIZE, RED);
+            PlaySound(gameOverSound);
         }
         
         sprintf(buff, "Score : %d", score);
